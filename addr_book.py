@@ -16,10 +16,19 @@ class AddressBook(UserDict):
     def iterator(self, number):
         current_index = 0
         records = list(self.data.values())
-        if number < 0: number*-number
+        if number < 0: number*=-1
         while current_index < len(records):
             yield records[current_index:current_index+number]
             current_index += number
+    
+    def find_matches(self, user_input):
+        user_input = user_input.lower()
+        matches = []
+        for name, record in self.data.items():
+            if user_input in name or record.has_match(user_input):
+                matches.append(record)
+        return matches
+            
 
     
 class Field:
@@ -107,6 +116,13 @@ class Record:
         delta1 = datetime(today.year, bd_month, bd_day).date()
         delta2 = datetime(today.year+1, bd_month, bd_day-1).date()
         return ((delta1 if delta1 > today else delta2) - today).days
+
+    def has_match(self, input_data):
+        input_data = input_data.lower()
+        for i in [str(phone.value) for phone in self.phones]:
+            if input_data in i:
+                return True
+        return False
 
     def __repr__(self):
         if self.birthday:

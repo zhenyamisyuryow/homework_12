@@ -1,7 +1,12 @@
 from addr_book import *
+import pickle
 
 
-contacts = AddressBook()
+try:
+    with open("cb.bin", "rb") as fh:
+        contacts = pickle.load(fh)
+except:
+    contacts = AddressBook()
 
 def input_error(func):
     def handler(*args):
@@ -15,7 +20,7 @@ def input_error(func):
         except IndexError:
             return "Error: provide both name and phone number."
         except TypeError:
-            return f"Error: provide all required parameters: {', '.join(argnames)}"
+            return f"Error: required parameters are: {', '.join(argnames)}"
     return handler
 
 
@@ -26,7 +31,7 @@ def hello(*args):
 
 @input_error
 def showall():
-    number = int(input("How many records would you like to retrieve in one iteration?\n>>> "))
+    number = input("How many records would you like to retrieve in one iteration?\n>>> ")
     result = contacts.iterator(number)
     for records_batch in result:
         for i in records_batch:
@@ -49,6 +54,7 @@ def add(name:str, *args) -> None:
         contacts.add_record(rec)
         return f"Success! {name} has been added to your contacts list."
     else:
+        phone = Phone(args[0])
         if contacts[name].add_phone(Phone(args[0])):
             return f"Phone {phone} has been added to {name}"
         else:
@@ -78,16 +84,32 @@ def delete(name, phone):
         return f"Success! {phone} has been deleted."
     else:
         return f"Phone was not found"
+    
+@input_error
+def find(user_input):
+    result = contacts.find_matches(user_input)
+    if result:
+        return '\n\n'.join(str(rec) for rec in result)
+    return f"No matches found for given input: {user_input}."
+
+
+def bye():
+    with open ("cb.bin", "wb") as fh:
+        pickle.dump(contacts, fh)
+    return "Good bye!"
+
 
 def main():
 
+    
     func_maps = {
         "hello" : hello,
         "add" : add,
         "change" : change,
         "delete" : delete,
         "phone" : phone,
-        "showall" : showall
+        "showall" : showall,
+        "find" : find,
     }
 
     print("Enter the first command:")
@@ -100,7 +122,7 @@ def main():
             continue
 
         if user_input in ["good bye", "exit", "close"]:
-            print("Good bye!")
+            print(bye())
             break
 
         input_parts = user_input.split()
